@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "ClickPulse",
+  "version": "1.0.0",
+  "description": "Monitor de atividade do mouse em tempo real. Rastreie cliques, tempo ativo e pausas diretamente no navegador.",
+  "author": "Elton",
+  "permissions": ["storage", "activeTab", "scripting", "sidePanel"],
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "action": {
+    "default_icon": {
+      "128": "icons/icon128.png"
+    },
+    "default_title": "ClickPulse — Monitor de Mouse"
+  },
+  "icons": {
+    "128": "icons/icon128.png"
+  }
+}
