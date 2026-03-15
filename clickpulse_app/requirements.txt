@@ -1,0 +1,4 @@
+pynput>=1.7.6
+PyQt6>=6.6.0
+pyqtgraph>=0.13.3
+plyer>=2.1.0
