@@ -1,77 +1,264 @@
 @echo off
+setlocal EnableDelayedExpansion
 chcp 65001 >nul 2>&1
 title ClickPulse - Instalador
-color 0A
+mode con: cols=72 lines=40
+color 0F
 
+:: ============================================================
+:: TELA INICIAL
+:: ============================================================
+cls
 echo.
-echo  ╔══════════════════════════════════════════════╗
-echo  ║         ClickPulse - Instalador v1.0         ║
-echo  ╚══════════════════════════════════════════════╝
+color 05
+echo   ██████╗██╗     ██╗ ██████╗██╗  ██╗██████╗ ██╗   ██╗██╗     ███████╗
+echo  ██╔════╝██║     ██║██╔════╝██║ ██╔╝██╔══██╗██║   ██║██║     ██╔════╝
+echo  ██║     ██║     ██║██║     █████╔╝ ██████╔╝██║   ██║██║     ███████╗
+echo  ██║     ██║     ██║██║     ██╔═██╗ ██╔═══╝ ██║   ██║██║     ╚════██║
+echo  ╚██████╗███████╗██║╚██████╗██║  ██╗██║     ╚██████╔╝███████╗███████║
+echo   ╚═════╝╚══════╝╚═╝ ╚═════╝╚═╝  ╚═╝╚═╝      ╚═════╝ ╚══════╝╚══════╝
 echo.
+color 0F
+echo   ┌──────────────────────────────────────────────────────────────┐
+echo   │         Monitor de Atividade do Mouse para Windows          │
+echo   │                    Instalador v1.0                          │
+echo   │                                                             │
+echo   │          Desenvolvido por Elton                             │
+echo   └──────────────────────────────────────────────────────────────┘
+echo.
+echo   Este instalador ira:
+echo.
+echo     [■] Verificar o Python no seu sistema
+echo     [■] Criar um ambiente virtual isolado
+echo     [■] Instalar todas as dependencias
+echo     [■] Gerar o executavel ClickPulse.exe
+echo     [■] Criar atalho na area de trabalho (opcional)
+echo.
+echo   ──────────────────────────────────────────────────────────────
+echo.
+set /p iniciar="   Pressione ENTER para iniciar a instalacao...  "
 
-:: Verificar Python
-echo  [1/4] Verificando Python...
+:: ============================================================
+:: ETAPA 1 - PYTHON
+:: ============================================================
+cls
+echo.
+echo   ┌──────────────────────────────────────────────────────────────┐
+echo   │  ETAPA 1 de 5                                               │
+echo   │  Verificando Python...                                      │
+echo   └──────────────────────────────────────────────────────────────┘
+echo.
+call :progress 15
+
 python --version >nul 2>&1
 if errorlevel 1 (
     echo.
-    echo  [ERRO] Python nao encontrado!
-    echo  Baixe em: https://www.python.org/downloads/
-    echo  IMPORTANTE: Marque "Add Python to PATH" durante a instalacao.
+    color 0C
+    echo   ╔══════════════════════════════════════════════════════════╗
+    echo   ║  ERRO: Python nao foi encontrado!                       ║
+    echo   ║                                                          ║
+    echo   ║  1. Baixe em: https://www.python.org/downloads/         ║
+    echo   ║  2. IMPORTANTE: Marque "Add Python to PATH"             ║
+    echo   ║  3. Reinicie o computador apos instalar                 ║
+    echo   ║  4. Execute este instalador novamente                   ║
+    echo   ╚══════════════════════════════════════════════════════════╝
     echo.
     pause
     exit /b 1
 )
-for /f "tokens=2" %%i in ('python --version 2^>^&1') do echo  Python %%i encontrado!
-
-:: Criar ambiente virtual
+for /f "tokens=2" %%i in ('python --version 2^>^&1') do set PYVER=%%i
 echo.
-echo  [2/4] Criando ambiente virtual...
+color 0A
+echo     ✓ Python %PYVER% encontrado com sucesso!
+color 0F
+timeout /t 2 >nul
+
+:: ============================================================
+:: ETAPA 2 - AMBIENTE VIRTUAL
+:: ============================================================
+cls
+echo.
+echo   ┌──────────────────────────────────────────────────────────────┐
+echo   │  ETAPA 2 de 5                                               │
+echo   │  Criando ambiente virtual...                                 │
+echo   └──────────────────────────────────────────────────────────────┘
+echo.
+echo     [✓] Python %PYVER%
+echo.
+
 if not exist "venv" (
+    echo     Criando ambiente virtual isolado...
+    echo.
+    call :progress 25
     python -m venv venv
-    echo  Ambiente virtual criado!
+    echo.
+    color 0A
+    echo     ✓ Ambiente virtual criado!
+    color 0F
 ) else (
-    echo  Ambiente virtual ja existe.
+    call :progress 25
+    echo.
+    color 0A
+    echo     ✓ Ambiente virtual ja existe. Reutilizando...
+    color 0F
+)
+timeout /t 2 >nul
+
+:: ============================================================
+:: ETAPA 3 - DEPENDENCIAS
+:: ============================================================
+cls
+echo.
+echo   ┌──────────────────────────────────────────────────────────────┐
+echo   │  ETAPA 3 de 5                                               │
+echo   │  Instalando dependencias...                                  │
+echo   └──────────────────────────────────────────────────────────────┘
+echo.
+echo     [✓] Python %PYVER%
+echo     [✓] Ambiente virtual
+echo.
+echo     Instalando pacotes:
+echo       ○ PyQt6        - Interface grafica
+echo       ○ pyqtgraph    - Graficos em tempo real
+echo       ○ pynput       - Captura do mouse
+echo       ○ plyer        - Notificacoes Windows
+echo.
+
+call venv\Scripts\activate.bat
+call :progress 50
+pip install -r requirements.txt --quiet 2>nul
+echo.
+color 0A
+echo     ✓ Todas as dependencias instaladas!
+color 0F
+timeout /t 2 >nul
+
+:: ============================================================
+:: ETAPA 4 - GERAR .EXE
+:: ============================================================
+cls
+echo.
+echo   ┌──────────────────────────────────────────────────────────────┐
+echo   │  ETAPA 4 de 5                                               │
+echo   │  Gerando executavel...                                       │
+echo   └──────────────────────────────────────────────────────────────┘
+echo.
+echo     [✓] Python %PYVER%
+echo     [✓] Ambiente virtual
+echo     [✓] Dependencias instaladas
+echo.
+echo     Gerando ClickPulse.exe... (pode levar alguns minutos)
+echo.
+
+pip install pyinstaller --quiet 2>nul
+call :progress 75
+pyinstaller --onefile --windowed --icon=assets\icon.png --name=ClickPulse --add-data="assets;assets" main.py --noconfirm --clean >nul 2>&1
+call :progress 95
+echo.
+
+if not exist "dist\ClickPulse.exe" (
+    color 0E
+    echo     ! Nao foi possivel gerar o .exe
+    echo     ! Use o ClickPulse.bat para iniciar o app
+    color 0F
+    timeout /t 3 >nul
+    goto :FIM
 )
 
-:: Instalar dependencias
-echo.
-echo  [3/4] Instalando dependencias...
-call venv\Scripts\activate.bat
-pip install -r requirements.txt --quiet
-echo  Dependencias instaladas!
+color 0A
+echo     ✓ ClickPulse.exe gerado com sucesso!
+color 0F
+timeout /t 2 >nul
 
-:: Gerar executavel
+:: ============================================================
+:: ETAPA 5 - ATALHO
+:: ============================================================
+cls
 echo.
-echo  [4/4] Gerando executavel ClickPulse.exe...
-pip install pyinstaller --quiet
-pyinstaller --onefile --windowed --icon=assets\icon.png --name=ClickPulse --add-data="assets;assets" main.py --noconfirm --clean >nul 2>&1
+echo   ┌──────────────────────────────────────────────────────────────┐
+echo   │  ETAPA 5 de 5                                               │
+echo   │  Finalizando instalacao...                                   │
+echo   └──────────────────────────────────────────────────────────────┘
+echo.
+echo     [✓] Python %PYVER%
+echo     [✓] Ambiente virtual
+echo     [✓] Dependencias instaladas
+echo     [✓] ClickPulse.exe gerado
+echo.
+call :progress 100
+echo.
+echo.
+set /p criar_atalho="     Criar atalho na area de trabalho? (S/N): "
+if /i "%criar_atalho%"=="S" (
+    powershell -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut([IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), 'ClickPulse.lnk')); $s.TargetPath = '%~dp0dist\ClickPulse.exe'; $s.WorkingDirectory = '%~dp0dist'; $s.IconLocation = '%~dp0dist\ClickPulse.exe'; $s.Description = 'Monitor de atividade do mouse'; $s.Save()" >nul 2>&1
+    echo.
+    color 0A
+    echo     ✓ Atalho criado na area de trabalho!
+    color 0F
+)
+
+:: ============================================================
+:: TELA FINAL
+:: ============================================================
+:FIM
+cls
+echo.
+color 05
+echo   ██████╗██╗     ██╗ ██████╗██╗  ██╗██████╗ ██╗   ██╗██╗     ███████╗
+echo  ██╔════╝██║     ██║██╔════╝██║ ██╔╝██╔══██╗██║   ██║██║     ██╔════╝
+echo  ██║     ██║     ██║██║     █████╔╝ ██████╔╝██║   ██║██║     ███████╗
+echo  ██║     ██║     ██║██║     ██╔═██╗ ██╔═══╝ ██║   ██║██║     ╚════██║
+echo  ╚██████╗███████╗██║╚██████╗██║  ██╗██║     ╚██████╔╝███████╗███████║
+echo   ╚═════╝╚══════╝╚═╝ ╚═════╝╚═╝  ╚═╝╚═╝      ╚═════╝ ╚══════╝╚══════╝
+echo.
+color 0A
+echo   ╔══════════════════════════════════════════════════════════════╗
+echo   ║                                                              ║
+echo   ║            INSTALACAO CONCLUIDA COM SUCESSO!                 ║
+echo   ║                                                              ║
+echo   ╚══════════════════════════════════════════════════════════════╝
+color 0F
+echo.
+echo   ──────────────────────────────────────────────────────────────
+echo.
 
 if exist "dist\ClickPulse.exe" (
+    echo     Executavel:  dist\ClickPulse.exe
+    echo     Tamanho:     Pronto para uso!
     echo.
-    echo  ╔══════════════════════════════════════════════╗
-    echo  ║          INSTALACAO CONCLUIDA!                ║
-    echo  ╚══════════════════════════════════════════════╝
+    echo     Como usar:
+    echo       ● Duplo clique em dist\ClickPulse.exe
+    echo       ● Ou use o atalho na area de trabalho
     echo.
-    echo  O executavel foi gerado em: dist\ClickPulse.exe
+    echo   ──────────────────────────────────────────────────────────────
     echo.
-    echo  Voce pode:
-    echo    1. Executar dist\ClickPulse.exe diretamente
-    echo    2. Criar um atalho na area de trabalho
-    echo    3. Copiar para qualquer pasta
-    echo.
-    
-    :: Criar atalho na area de trabalho
-    set /p criar_atalho="  Deseja criar atalho na area de trabalho? (S/N): "
-    if /i "%criar_atalho%"=="S" (
-        powershell -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut([IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), 'ClickPulse.lnk')); $s.TargetPath = '%~dp0dist\ClickPulse.exe'; $s.WorkingDirectory = '%~dp0dist'; $s.IconLocation = '%~dp0dist\ClickPulse.exe'; $s.Description = 'Monitor de atividade do mouse'; $s.Save()"
-        echo  Atalho criado na area de trabalho!
+    set /p abrir="     Deseja abrir o ClickPulse agora? (S/N): "
+    if /i "!abrir!"=="S" (
+        start "" "%~dp0dist\ClickPulse.exe"
+        echo.
+        echo     Abrindo ClickPulse...
     )
 ) else (
-    echo.
-    echo  [AVISO] Nao foi possivel gerar o .exe automaticamente.
-    echo  Voce pode usar o ClickPulse.bat para iniciar o app.
+    echo     Use o ClickPulse.bat para iniciar o app.
 )
 
 echo.
-echo  Pressione qualquer tecla para fechar...
+echo   ──────────────────────────────────────────────────────────────
+echo     Desenvolvido por Elton
+echo   ──────────────────────────────────────────────────────────────
+echo.
+echo     Pressione qualquer tecla para fechar...
 pause >nul
+exit /b 0
+
+:: ============================================================
+:: FUNCAO: BARRA DE PROGRESSO
+:: ============================================================
+:progress
+set /a "filled=%1 / 5"
+set /a "empty=20 - filled"
+set "bar="
+for /l %%i in (1,1,%filled%) do set "bar=!bar!█"
+for /l %%i in (1,1,%empty%) do set "bar=!bar!░"
+echo     [!bar!] %1%%
+goto :eof
