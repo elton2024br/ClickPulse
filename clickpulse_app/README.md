@@ -13,6 +13,7 @@
   <img src="https://img.shields.io/badge/PyQt6-UI%20Framework-41CD52?logo=qt&logoColor=white" alt="PyQt6">
   <img src="https://img.shields.io/badge/SQLite-Database-003B57?logo=sqlite&logoColor=white" alt="SQLite">
   <img src="https://img.shields.io/badge/platform-Windows-0078D6?logo=windows&logoColor=white" alt="Windows">
+  <img src="https://img.shields.io/badge/Chrome-Extension-4285F4?logo=googlechrome&logoColor=white" alt="Chrome Extension">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
 </p>
 
@@ -187,6 +188,46 @@ Todas as configuracoes podem ser ajustadas pela interface:
 | Alerta de pausa longa | 30 min | Notifica apos X minutos em pausa |
 | Milestone de cliques | 100 | Notifica a cada X cliques atingidos |
 | Intervalo de verificacao | 10 seg | Frequencia de checagem de atividade |
+
+---
+
+## Extensao Chrome
+
+O ClickPulse tambem esta disponivel como extensao para Google Chrome! A extensao abre como um painel lateral (side panel) e rastreia todos os cliques do mouse diretamente no navegador.
+
+### Funcionalidades da Extensao
+
+- **Side Panel** — Abre como painel lateral ao clicar no icone da extensao
+- **Rastreamento real** — Captura cliques esquerdo, direito e meio em todas as abas
+- **Dashboard completo** — Cards de estatisticas, grafico de barras por hora, grafico de pizza, live feed e timeline
+- **Persistencia** — Dados salvos via chrome.storage.local com reset diario automatico
+- **Configuracoes** — Pause/retome o rastreamento e resete os dados a qualquer momento
+- **Tema escuro** — Visual consistente com o app desktop
+
+### Instalacao da Extensao
+
+1. Baixe ou clone este repositorio
+2. Abra o Chrome e va em `chrome://extensions/`
+3. Ative o **Modo do desenvolvedor** (canto superior direito)
+4. Clique em **Carregar sem compactacao**
+5. Selecione a pasta `clickpulse_extension/`
+6. Clique no icone do ClickPulse na barra de ferramentas para abrir o painel lateral
+
+### Estrutura da Extensao
+
+```
+clickpulse_extension/
+├── manifest.json          # Configuracao Manifest V3
+├── background.js          # Service worker (agregacao de dados)
+├── content.js             # Content script (captura de cliques)
+├── sidepanel.html         # Interface do painel lateral
+├── sidepanel.css          # Estilos (tema escuro)
+├── sidepanel.js           # Logica do dashboard (vanilla JS)
+└── icons/
+    ├── icon16.png
+    ├── icon48.png
+    └── icon128.png
+```
 
 ---
 
