@@ -94,3 +94,47 @@ Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHea
 ### `scripts` (`@workspace/scripts`)
 
 Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.
+
+## ClickPulse — Desktop App (Python)
+
+Standalone Python desktop application in `clickpulse_app/`. Not part of the pnpm workspace — runs independently on Windows.
+
+### Stack
+- Python 3.11+, PyQt6 (GUI), pyqtgraph (charts), pynput (mouse hooks), plyer (notifications), SQLite
+
+### Structure
+```text
+clickpulse_app/
+├── main.py                  # Entry point
+├── requirements.txt         # Python dependencies
+├── README_COMO_INSTALAR.md  # Installation guide (PT-BR)
+├── assets/icon.png          # App icon
+└── clickpulse/
+    ├── __init__.py           # Version
+    ├── database.py           # SQLite thread-safe CRUD
+    ├── config.py             # Settings manager
+    ├── tracker.py            # Mouse hook (pynput)
+    ├── activity.py           # Activity/pause detector
+    ├── aggregator.py         # Hourly stats aggregation
+    ├── notifier.py           # Windows toast notifications
+    ├── exporter.py           # CSV export
+    └── ui/
+        ├── main_window.py    # Main window with tabs
+        ├── dashboard.py      # Real-time dashboard with charts
+        ├── history.py        # History tab with date selector
+        ├── settings_ui.py    # Settings tab
+        └── tray.py           # System tray icon
+```
+
+### Running on Windows
+```bash
+cd clickpulse_app
+pip install -r requirements.txt
+python main.py
+```
+
+### Building .exe
+```bash
+pip install pyinstaller
+pyinstaller --onefile --windowed --icon=assets/icon.png --name=ClickPulse main.py
+```

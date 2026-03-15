@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "bCn--gfwidSGcm9sgSYjN"
+uri = "file://clickpulse_app/README_COMO_INSTALAR.md"
+type = "text"
+title = "ClickPulse — Guia de Instalação"
