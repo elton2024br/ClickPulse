@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "ClickPulse"
+version = "1.0.0"
+id = "artifacts/clickpulse-site"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+localPort = 22731
+name = "web"
+paths = ["/"]
+
+[services.development]
+run = "pnpm --filter @workspace/clickpulse-site run dev"
+
+[services.env]
+PORT = "22731"
+BASE_PATH = "/"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/clickpulse-site", "run", "build"]
+publicDir = "artifacts/clickpulse-site/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
