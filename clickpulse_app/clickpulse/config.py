@@ -15,6 +15,7 @@ class Config:
         for key, value in DEFAULTS.items():
             if self._db.get_setting(key) is None:
                 self._db.set_setting(key, json.dumps(value))
+        self._cleanup_legacy_keys()
 
     def get(self, key, default=None):
         raw = self._db.get_setting(key)
@@ -43,6 +44,12 @@ class Config:
     @property
     def long_pause_alert_minutes(self):
         return self.get("long_pause_alert_minutes", DEFAULTS["long_pause_alert_minutes"])
+
+    def _cleanup_legacy_keys(self):
+        legacy_keys = ["console_refresh_seconds"]
+        for key in legacy_keys:
+            if self._db.get_setting(key) is not None:
+                self._db.delete_setting(key)
 
     def reset_defaults(self):
         for key, value in DEFAULTS.items():

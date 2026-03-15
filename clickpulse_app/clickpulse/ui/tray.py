@@ -55,6 +55,7 @@ class SystemTray(QSystemTrayIcon):
             self._tracker.pause()
             self._pause_action.setText("Retomar rastreamento")
             self._window.update_tracking_state(False)
+        self._update_tooltip()
 
     def _quit_app(self):
         from PyQt6.QtWidgets import QApplication

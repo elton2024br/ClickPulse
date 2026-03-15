@@ -184,6 +184,12 @@ class Database:
             )
             self._conn.commit()
 
+    def delete_setting(self, key):
+        with self._lock:
+            cur = self._conn.cursor()
+            cur.execute("DELETE FROM settings WHERE key = ?", (key,))
+            self._conn.commit()
+
     def close(self):
         with self._lock:
             self._conn.close()
