@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClickPulse</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-left">
+        <img src="icons/icon48.png" alt="ClickPulse" class="header-icon">
+        <span class="header-title">ClickPulse</span>
+        <span class="header-version">v1.0.0</span>
+      </div>
+      <div class="header-right">
+        <div class="status-indicator" id="statusDot"></div>
+        <span class="status-text" id="statusText">Ativo</span>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="dashboard">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button class="tab" data-tab="settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Configurações
+      </button>
+    </nav>
+
+    <main class="content" id="content">
+      <div id="dashboardTab">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Cliques Hoje</span>
+              <div class="stat-icon purple">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 22c-1.66 0-3-1.34-3-3V9c0-1.66 1.34-3 3-3s3 1.34 3 3v10c0 1.66-1.34 3-3 3z"/><path d="M12 6V4c0-1.1.9-2 2-2s2 .9 2 2v2"/><path d="M16 10V8c0-1.1.9-2 2-2s2 .9 2 2v2"/><path d="M20 14v-2c0-1.1-.9-2-2-2"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="statTotal">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Tempo Ativo</span>
+              <div class="stat-icon green">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="statActive">0h 0m</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Pausas</span>
+              <div class="stat-icon red">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="statPause">0h 0m</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Cliques / Hora</span>
+              <div class="stat-icon blue">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="statRate">0</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-accent purple"></div>
+            <span class="card-title">Cliques por Hora</span>
+          </div>
+          <div class="card-body chart-container">
+            <canvas id="barChart" width="360" height="180"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-accent blue"></div>
+            <span class="card-title">Tipos de Clique</span>
+          </div>
+          <div class="card-body pie-container">
+            <div class="pie-wrapper">
+              <canvas id="pieChart" width="180" height="180"></canvas>
+              <div class="pie-center">
+                <span class="pie-center-value" id="pieTotal">0</span>
+                <span class="pie-center-label">Total</span>
+              </div>
+            </div>
+            <div class="pie-legend">
+              <div class="legend-item">
+                <div class="legend-dot" style="background:#3B82F6"></div>
+                <span>Esquerdo</span>
+                <span class="legend-value" id="legendLeft">0</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-dot" style="background:#EF4444"></div>
+                <span>Direito</span>
+                <span class="legend-value" id="legendRight">0</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-dot" style="background:#F59E0B"></div>
+                <span>Meio</span>
+                <span class="legend-value" id="legendMiddle">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-accent green"></div>
+            <span class="card-title">Timeline de Atividade</span>
+          </div>
+          <div class="card-body">
+            <div class="timeline-bar" id="timelineBar"></div>
+            <div class="timeline-labels">
+              <span>00:00</span>
+              <span>06:00</span>
+              <span>12:00</span>
+              <span>18:00</span>
+              <span>23:59</span>
+            </div>
+            <div class="timeline-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:#22C55E"></div><span>Ativo</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#EF4444"></div><span>Pausa</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="live-dot"></div>
+            <span class="card-title">Live Feed</span>
+            <span class="feed-badge">Últimos 20</span>
+          </div>
+          <div class="card-body feed-body" id="liveFeedList">
+            <div class="feed-empty">Aguardando atividade do mouse...</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="settingsTab" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-accent purple"></div>
+            <span class="card-title">Rastreamento</span>
+          </div>
+          <div class="card-body">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-label">Pausar Rastreamento</span>
+                <span class="setting-desc">Interromper a captura de cliques temporariamente</span>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="pauseToggle">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-accent red"></div>
+            <span class="card-title">Dados</span>
+          </div>
+          <div class="card-body">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-label">Resetar Dados do Dia</span>
+                <span class="setting-desc">Apagar todos os cliques registrados hoje</span>
+              </div>
+              <button class="btn-danger" id="resetBtn">Resetar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-accent blue"></div>
+            <span class="card-title">Sobre</span>
+          </div>
+          <div class="card-body about-body">
+            <div class="about-row">
+              <span class="about-label">Versão</span>
+              <span class="about-value">1.0.0</span>
+            </div>
+            <div class="about-row">
+              <span class="about-label">Autor</span>
+              <span class="about-value">Elton</span>
+            </div>
+            <div class="about-row">
+              <span class="about-label">Licença</span>
+              <span class="about-value">MIT</span>
+            </div>
+            <div class="about-row">
+              <span class="about-label">GitHub</span>
+              <a href="https://github.com/elton2024br/ClickPulse" target="_blank" class="about-link">elton2024br/ClickPulse</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <span>Desenvolvido por <strong>Elton</strong></span>
+    </footer>
+  </div>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>
