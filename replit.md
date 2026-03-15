@@ -138,3 +138,32 @@ python main.py
 pip install pyinstaller
 pyinstaller --onefile --windowed --icon=assets/icon.png --name=ClickPulse main.py
 ```
+
+## ClickPulse — Chrome Extension
+
+Chrome extension in `clickpulse_extension/`. Opens as a side panel. Vanilla JS (no frameworks). Tracks real clicks via content script.
+
+### Stack
+- Manifest V3, Chrome Side Panel API, chrome.storage.local, Canvas 2D API
+
+### Structure
+```text
+clickpulse_extension/
+├── manifest.json          # Extension config (Manifest V3, sidePanel permission)
+├── background.js          # Service worker — data aggregation, chrome.storage
+├── content.js             # Injected into all pages — captures mousedown events
+├── sidepanel.html         # Side panel UI structure
+├── sidepanel.css          # Dark theme styles
+├── sidepanel.js           # Dashboard rendering (Canvas 2D charts, live feed)
+└── icons/                 # 16px, 48px, 128px PNG icons
+```
+
+### Key Architecture
+- `content.js` → sends CLICK_EVENT messages to background.js (throttled 50ms)
+- `background.js` → aggregates into chrome.storage.local (hourly buckets, live feed, timeline)
+- `sidepanel.js` → reads from chrome.storage, renders charts with Canvas 2D, updates via chrome.storage.onChanged
+- Daily auto-reset when date changes
+- Tabs: Dashboard (stats, bar chart, pie chart, timeline, live feed) and Settings (pause toggle, reset, about)
+
+### GitHub
+- Repo: https://github.com/elton2024br/ClickPulse (includes both desktop app and extension)

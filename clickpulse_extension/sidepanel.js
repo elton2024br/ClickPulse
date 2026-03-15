@@ -33,8 +33,6 @@ function init() {
       updatePauseUI();
     }
   });
-
-  setInterval(loadData, 2000);
 }
 
 function setupTabs() {
@@ -52,10 +50,9 @@ function setupTabs() {
 function setupSettings() {
   $('#pauseToggle').addEventListener('change', () => {
     chrome.runtime.sendMessage({ type: 'TOGGLE_PAUSE' }, (res) => {
-      if (res) {
-        isPaused = res.paused;
-        updatePauseUI();
-      }
+      if (chrome.runtime.lastError || !res) return;
+      isPaused = res.paused;
+      updatePauseUI();
     });
   });
 
@@ -107,7 +104,7 @@ function updatePauseUI() {
 
 function loadData() {
   chrome.runtime.sendMessage({ type: 'GET_DATA' }, (result) => {
-    if (!result) return;
+    if (chrome.runtime.lastError || !result) return;
     currentData = result.data;
     isPaused = result.paused;
     updatePauseUI();
@@ -268,12 +265,12 @@ function renderPieChart(left, right, middle, total) {
     { value: middle, color: COLORS.yellow }
   ];
 
-  const gap = 0.04;
+  const nonZeroSlices = slices.filter(s => s.value > 0);
+  const gap = nonZeroSlices.length > 1 ? 0.04 : 0;
   let startAngle = -Math.PI / 2;
 
-  slices.forEach(slice => {
-    if (slice.value === 0) return;
-    const sweep = (slice.value / total) * Math.PI * 2 - gap;
+  nonZeroSlices.forEach(slice => {
+    const sweep = Math.max(0.01, (slice.value / total) * Math.PI * 2 - gap);
     ctx.beginPath();
     ctx.arc(cx, cy, outerR, startAngle, startAngle + sweep);
     ctx.arc(cx, cy, innerR, startAngle + sweep, startAngle, true);
@@ -317,45 +314,20 @@ function renderLiveFeed(feed) {
   const typeLabels = { left: 'Esquerdo', right: 'Direito', middle: 'Meio' };
   const displayed = feed.slice(0, 20);
 
-  const existingIds = new Set();
-  container.querySelectorAll('.feed-item').forEach(el => existingIds.add(el.dataset.id));
-
-  const newIds = new Set(displayed.map(c => c.id));
-  container.querySelectorAll('.feed-item').forEach(el => {
-    if (!newIds.has(el.dataset.id)) el.remove();
-  });
-
-  const emptyMsg = container.querySelector('.feed-empty');
-  if (emptyMsg) emptyMsg.remove();
-
-  displayed.forEach((click, idx) => {
-    if (existingIds.has(click.id)) return;
-
-    const item = document.createElement('div');
-    item.className = 'feed-item';
-    item.dataset.id = click.id;
-
+  const html = displayed.map(click => {
     const time = new Date(click.timestamp);
     const timeStr = `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}:${time.getSeconds().toString().padStart(2, '0')}`;
 
-    item.innerHTML = `
+    return `<div class="feed-item" data-id="${click.id}">
       <div class="feed-item-left">
         <span class="feed-type ${click.type}">${typeLabels[click.type] || 'Clique'}</span>
         <span class="feed-coords">X:${String(click.x).padStart(4, ' ')} Y:${String(click.y).padStart(4, ' ')}</span>
       </div>
       <span class="feed-time">${timeStr}</span>
-    `;
+    </div>`;
+  }).join('');
 
-    if (container.firstChild) {
-      container.insertBefore(item, container.firstChild);
-    } else {
-      container.appendChild(item);
-    }
-  });
-
-  while (container.children.length > 20) {
-    container.removeChild(container.lastChild);
-  }
+  container.innerHTML = html;
 }
 
 document.addEventListener('DOMContentLoaded', init);
