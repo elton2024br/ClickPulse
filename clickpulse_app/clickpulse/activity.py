@@ -72,34 +72,31 @@ class ActivityDetector:
             return datetime.now() - self._current_pause_start
         return timedelta(0)
 
-    @property
-    def active_time_today(self):
-        today = datetime.now().strftime("%Y-%m-%d")
-        tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
-        periods = self._db.get_activity_periods_in_range(today, tomorrow)
+    def _calc_time_today(self, period_type):
+        now = datetime.now()
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_str = today_start.strftime("%Y-%m-%d %H:%M:%S")
+        tomorrow_str = (today_start + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
+        periods = self._db.get_activity_periods_in_range(today_str, tomorrow_str)
         total = timedelta(0)
         for p in periods:
-            if p["type"] == "active":
-                start = datetime.strptime(p["start_time"], "%Y-%m-%d %H:%M:%S")
-                if p["end_time"]:
-                    end = datetime.strptime(p["end_time"], "%Y-%m-%d %H:%M:%S")
-                else:
-                    end = datetime.now()
-                total += end - start
+            if p["type"] != period_type:
+                continue
+            start = datetime.strptime(p["start_time"], "%Y-%m-%d %H:%M:%S")
+            if p["end_time"]:
+                end = datetime.strptime(p["end_time"], "%Y-%m-%d %H:%M:%S")
+            else:
+                end = now
+            effective_start = max(start, today_start)
+            effective_end = min(end, now)
+            if effective_end > effective_start:
+                total += effective_end - effective_start
         return total
 
     @property
+    def active_time_today(self):
+        return self._calc_time_today("active")
+
+    @property
     def pause_time_today(self):
-        today = datetime.now().strftime("%Y-%m-%d")
-        tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
-        periods = self._db.get_activity_periods_in_range(today, tomorrow)
-        total = timedelta(0)
-        for p in periods:
-            if p["type"] == "pause":
-                start = datetime.strptime(p["start_time"], "%Y-%m-%d %H:%M:%S")
-                if p["end_time"]:
-                    end = datetime.strptime(p["end_time"], "%Y-%m-%d %H:%M:%S")
-                else:
-                    end = datetime.now()
-                total += end - start
-        return total
+        return self._calc_time_today("pause")

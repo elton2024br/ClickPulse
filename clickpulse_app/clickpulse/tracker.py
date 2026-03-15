@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 from pynput import mouse
 
@@ -10,6 +11,7 @@ class MouseTracker:
         self._last_activity = datetime.now()
         self._running = False
         self._paused = False
+        self._last_move_time = 0.0
 
     def start(self):
         if self._running:
@@ -55,7 +57,11 @@ class MouseTracker:
                 pass
 
     def _on_move(self, x, y):
-        if not self._paused:
+        if self._paused:
+            return
+        now = time.monotonic()
+        if now - self._last_move_time >= 0.1:
+            self._last_move_time = now
             self._last_activity = datetime.now()
 
     def _on_scroll(self, x, y, dx, dy):

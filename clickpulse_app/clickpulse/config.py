@@ -3,7 +3,6 @@ import json
 
 DEFAULTS = {
     "pause_threshold_minutes": 3,
-    "console_refresh_seconds": 30,
     "activity_check_seconds": 10,
     "notification_click_milestone": 100,
     "long_pause_alert_minutes": 30,

@@ -1,10 +1,17 @@
 import sys
+from datetime import date
 
 
 class Notifier:
     def __init__(self):
         self._last_milestone = 0
         self._long_pause_notified = False
+        self._current_date = date.today()
+
+    def initialize_milestone(self, total_clicks_today, config):
+        milestone = config.notification_click_milestone
+        if milestone > 0:
+            self._last_milestone = total_clicks_today // milestone
 
     def notify(self, title, message, duration=5):
         try:
@@ -21,7 +28,15 @@ class Notifier:
         except Exception:
             print(f"[Notification] {title}: {message}")
 
+    def _check_date_rollover(self):
+        today = date.today()
+        if today != self._current_date:
+            self._current_date = today
+            self._last_milestone = 0
+            self._long_pause_notified = False
+
     def check_milestones(self, total_clicks_today, config):
+        self._check_date_rollover()
         milestone = config.notification_click_milestone
         if milestone <= 0:
             return
@@ -30,7 +45,7 @@ class Notifier:
             self._last_milestone = current_level
             self.notify(
                 "ClickPulse",
-                f"🎯 {total_clicks_today} cliques hoje!",
+                f"\U0001f3af {total_clicks_today} cliques hoje!",
             )
 
     def check_long_pause(self, pause_duration, config):
@@ -40,7 +55,7 @@ class Notifier:
             self._long_pause_notified = True
             self.notify(
                 "ClickPulse",
-                f"⏸ Pausa de {int(pause_minutes)} minutos detectada",
+                f"\u23f8 Pausa de {int(pause_minutes)} minutos detectada",
             )
         elif pause_minutes < threshold_minutes:
             self._long_pause_notified = False
@@ -52,7 +67,7 @@ class Notifier:
         active_min = hour_stats.get("active_seconds", 0) // 60
         self.notify(
             "ClickPulse",
-            f"⏰ Última hora: {clicks} cliques, {active_min} min ativo",
+            f"\u23f0 \u00daltima hora: {clicks} cliques, {active_min} min ativo",
         )
 
     def reset_daily(self):

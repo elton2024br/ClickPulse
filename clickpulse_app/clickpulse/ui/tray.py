@@ -4,11 +4,12 @@ from PyQt6.QtCore import QTimer
 
 
 class SystemTray(QSystemTrayIcon):
-    def __init__(self, window, tracker, activity, icon_path=None):
+    def __init__(self, window, tracker, activity, aggregator, icon_path=None):
         super().__init__()
         self._window = window
         self._tracker = tracker
         self._activity = activity
+        self._aggregator = aggregator
 
         if icon_path:
             self.setIcon(QIcon(icon_path))
@@ -65,9 +66,9 @@ class SystemTray(QSystemTrayIcon):
 
     def _update_tooltip(self):
         try:
-            from clickpulse.aggregator import Aggregator
+            rate = self._aggregator.get_current_hour_clicks()
             state = "Ativo" if self._activity.current_state == "active" else "Pausa"
-            self.setToolTip(f"ClickPulse — {state}")
+            self.setToolTip(f"ClickPulse — {rate} cliques/hora | {state}")
         except Exception:
             self.setToolTip("ClickPulse")
 
