@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "description": "Monitor de atividade do mouse em tempo real. Rastreie cliques, tempo ativo e pausas diretamente no navegador.",
   "author": "Elton",
-  "permissions": ["storage", "activeTab", "scripting", "sidePanel"],
+  "permissions": ["storage", "activeTab", "scripting", "tabs", "sidePanel"],
+  "host_permissions": ["<all_urls>"],
   "side_panel": {
     "default_path": "sidepanel.html"
   },

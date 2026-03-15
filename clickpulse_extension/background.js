@@ -1,5 +1,21 @@
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(console.error);
 
+chrome.runtime.onInstalled.addListener(async () => {
+  try {
+    const tabs = await chrome.tabs.query({});
+    for (const tab of tabs) {
+      if (tab.url && (tab.url.startsWith('http://') || tab.url.startsWith('https://'))) {
+        chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: ['content.js']
+        }).catch(() => {});
+      }
+    }
+  } catch (e) {
+    console.error('ClickPulse: inject error', e);
+  }
+});
+
 let clickQueue = [];
 let flushTimer = null;
 const FLUSH_INTERVAL = 200;
