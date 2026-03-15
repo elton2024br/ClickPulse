@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClickPulse — Monitor de Mouse</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #1E1E2E;
+      --bg-card: #2A2A3E;
+      --bg-card-hover: #313148;
+      --border: #3A3A50;
+      --border-light: #44445A;
+      --primary: #7C3AED;
+      --primary-dim: rgba(124, 58, 237, 0.15);
+      --green: #22C55E;
+      --green-dim: rgba(34, 197, 94, 0.15);
+      --red: #EF4444;
+      --red-dim: rgba(239, 68, 68, 0.15);
+      --blue: #3B82F6;
+      --blue-dim: rgba(59, 130, 246, 0.15);
+      --yellow: #F59E0B;
+      --yellow-dim: rgba(245, 158, 11, 0.15);
+      --text: #E4E4E7;
+      --text-muted: #9CA3AF;
+      --text-dim: #6B7280;
+      --font: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    .app {
+      max-width: 460px;
+      margin: 0 auto;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px;
+      background: linear-gradient(135deg, var(--bg-card) 0%, #252540 100%);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #9B5CF8, #7C3AED, #5B21B6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+    }
+
+    .header-logo svg { width: 18px; height: 18px; }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .header-badge {
+      display: flex;
+      gap: 5px;
+    }
+
+    .header-version {
+      font-size: 10px;
+      font-weight: 600;
+      background: var(--primary);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.3px;
+    }
+
+    .header-mode {
+      font-size: 10px;
+      font-weight: 600;
+      background: var(--green);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.3px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+
+    .status-dot.paused { background: var(--red); animation: none; }
+    .status-dot.disconnected { background: var(--yellow); animation: blink 1s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+      50% { opacity: 0.7; box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .status-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .tabs {
+      display: flex;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 0 10px;
+    }
+
+    .tab {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+    .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab svg { opacity: 0.7; }
+    .tab.active svg { opacity: 1; }
+
+    .content {
+      flex: 1;
+      padding: 14px;
+      overflow-y: auto;
+    }
+
+    .content::-webkit-scrollbar { width: 5px; }
+    .content::-webkit-scrollbar-track { background: transparent; }
+    .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .hidden { display: none !important; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      transition: all 0.25s;
+    }
+
+    .stat-card:hover {
+      border-color: var(--border-light);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      transform: translateY(-1px);
+    }
+
+    .stat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s;
+    }
+
+    .stat-card:hover .stat-icon { transform: scale(1.1); }
+    .stat-icon.purple { background: var(--primary-dim); color: var(--primary); border: 1px solid rgba(124,58,237,0.25); }
+    .stat-icon.green { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
+    .stat-icon.red { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+    .stat-icon.blue { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(59,130,246,0.25); }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      letter-spacing: -0.5px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-accent { width: 3px; height: 20px; border-radius: 2px; }
+    .card-accent.purple { background: var(--primary); }
+    .card-accent.green { background: var(--green); }
+    .card-accent.red { background: var(--red); }
+    .card-accent.blue { background: var(--blue); }
+
+    .card-title { font-size: 14px; font-weight: 600; flex: 1; }
+
+    .card-body { padding: 16px; }
+
+    .chart-container { padding: 8px; }
+    .chart-container canvas { width: 100% !important; height: auto !important; }
+
+    .pie-container { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+
+    .pie-wrapper { position: relative; width: 160px; height: 160px; }
+    .pie-wrapper canvas { width: 100% !important; height: 100% !important; }
+
+    .pie-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .pie-center-value { font-size: 22px; font-weight: 700; font-family: var(--font-mono); }
+    .pie-center-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .pie-legend { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .legend-value { margin-left: auto; font-family: var(--font-mono); font-weight: 600; color: var(--text); font-size: 12px; }
+
+    .timeline-bar {
+      display: flex;
+      height: 30px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+    }
+
+    .tl-seg {
+      flex: 1;
+      height: 100%;
+      border-right: 1px solid rgba(30,30,46,0.3);
+      transition: filter 0.15s;
+    }
+
+    .tl-seg:last-child { border-right: none; }
+    .tl-seg:hover { filter: brightness(1.3); }
+    .tl-seg.on { background: rgba(34,197,94,0.7); }
+    .tl-seg.off { background: rgba(239,68,68,0.5); }
+
+    .timeline-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      font-size: 10px;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+
+    .timeline-legend { display: flex; gap: 16px; margin-top: 10px; font-size: 11px; }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+
+    .feed-badge {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: rgba(255,255,255,0.05);
+      padding: 3px 8px;
+      border-radius: 4px;
+      margin-left: auto;
+    }
+
+    .feed-list {
+      max-height: 320px;
+      overflow-y: auto;
+      padding: 8px !important;
+    }
+
+    .feed-list::-webkit-scrollbar { width: 4px; }
+    .feed-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .feed-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+      margin-bottom: 4px;
+      animation: fadeSlide 0.35s ease;
+    }
+
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .feed-left { display: flex; align-items: center; gap: 8px; }
+
+    .feed-type {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid;
+      letter-spacing: 0.3px;
+    }
+
+    .feed-type.left { color: var(--blue); background: var(--blue-dim); border-color: rgba(59,130,246,0.3); }
+    .feed-type.right { color: var(--red); background: var(--red-dim); border-color: rgba(239,68,68,0.3); }
+    .feed-type.middle { color: var(--yellow); background: var(--yellow-dim); border-color: rgba(245,158,11,0.3); }
+
+    .feed-coords { font-size: 10px; font-family: var(--font-mono); color: var(--text-dim); }
+    .feed-time { font-size: 10px; font-family: var(--font-mono); color: var(--text-dim); }
+    .feed-empty { text-align: center; padding: 30px 0; color: var(--text-dim); font-size: 13px; }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .setting-info { flex: 1; }
+    .setting-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .setting-desc { display: block; font-size: 11px; color: var(--text-dim); }
+
+    .toggle { position: relative; display: inline-block; width: 42px; height: 24px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--border);
+      border-radius: 24px;
+      transition: 0.3s;
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background: var(--text);
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+
+    .toggle input:checked + .toggle-slider { background: var(--red); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+    .btn-danger {
+      padding: 8px 18px;
+      background: var(--red-dim);
+      color: var(--red);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .btn-danger:hover { background: rgba(239,68,68,0.25); border-color: var(--red); }
+
+    .about-body { display: flex; flex-direction: column; gap: 10px; }
+
+    .about-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .about-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .about-label { font-size: 12px; color: var(--text-muted); }
+    .about-value { font-size: 12px; font-weight: 600; font-family: var(--font-mono); }
+    .about-link { font-size: 12px; font-weight: 600; color: var(--primary); text-decoration: none; }
+    .about-link:hover { text-decoration: underline; }
+
+    .footer {
+      padding: 12px 18px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-dim);
+      border-top: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+
+    .footer strong { color: var(--primary); font-weight: 600; }
+
+    .confirm-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeSlide 0.2s ease;
+    }
+
+    .confirm-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      width: 300px;
+      text-align: center;
+    }
+
+    .confirm-box p { font-size: 14px; margin-bottom: 18px; color: var(--text); }
+
+    .confirm-actions { display: flex; gap: 10px; }
+
+    .confirm-actions button {
+      flex: 1;
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-cancel { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-muted); }
+    .btn-cancel:hover { background: rgba(255,255,255,0.1); }
+    .btn-confirm { background: var(--red-dim); border: 1px solid rgba(239,68,68,0.3); color: var(--red); }
+    .btn-confirm:hover { background: rgba(239,68,68,0.25); }
+
+    .tracking-banner {
+      padding: 10px 16px;
+      background: var(--green-dim);
+      border: 1px solid rgba(34,197,94,0.2);
+      border-radius: var(--radius-sm);
+      margin-bottom: 14px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--green);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .tracking-banner.paused {
+      background: var(--red-dim);
+      border-color: rgba(239,68,68,0.2);
+      color: var(--red);
+    }
+
+    .tracking-banner.disconnected {
+      background: var(--yellow-dim);
+      border-color: rgba(245,158,11,0.2);
+      color: var(--yellow);
+    }
+
+    .tracking-banner svg {
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-left">
+        <div class="header-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 22c-1.66 0-3-1.34-3-3V9c0-1.66 1.34-3 3-3s3 1.34 3 3v10c0 1.66-1.34 3-3 3z"/>
+            <path d="M12 6V4c0-1.1.9-2 2-2s2 .9 2 2v2"/>
+          </svg>
+        </div>
+        <span class="header-title">ClickPulse</span>
+        <div class="header-badge">
+          <span class="header-version">v1.0.0</span>
+          <span class="header-mode">LOCAL</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="status-dot" id="statusDot"></div>
+        <span class="status-label" id="statusText">Ativo</span>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="dashboard">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button class="tab" data-tab="settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852 1.003 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Configuracoes
+      </button>
+    </nav>
+
+    <main class="content">
+      <div id="dashboardTab">
+        <div class="tracking-banner" id="trackingBanner">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Rastreando cliques globais — funciona em TODAS as janelas
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Cliques Hoje</span>
+              <div class="stat-icon purple">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 22c-1.66 0-3-1.34-3-3V9c0-1.66 1.34-3 3-3s3 1.34 3 3v10c0 1.66-1.34 3-3 3z"/><path d="M12 6V4c0-1.1.9-2 2-2s2 .9 2 2v2"/><path d="M16 10V8c0-1.1.9-2 2-2s2 .9 2 2v2"/><path d="M20 14v-2c0-1.1-.9-2-2-2"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="statTotal">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Tempo Ativo</span>
+              <div class="stat-icon green">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="statActive">0h 0m</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Pausas</span>
+              <div class="stat-icon red">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="statPause">0h 0m</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Cliques / Hora</span>
+              <div class="stat-icon blue">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+            </div>
+            <div class="stat-value" id="statRate">0</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-accent purple"></div>
+            <span class="card-title">Cliques por Hora</span>
+          </div>
+          <div class="card-body chart-container">
+            <canvas id="barChart" width="400" height="180"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-accent blue"></div>
+            <span class="card-title">Tipos de Clique</span>
+          </div>
+          <div class="card-body pie-container">
+            <div class="pie-wrapper">
+              <canvas id="pieChart" width="160" height="160"></canvas>
+              <div class="pie-center">
+                <span class="pie-center-value" id="pieTotal">0</span>
+                <span class="pie-center-label">Total</span>
+              </div>
+            </div>
+            <div class="pie-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:#3B82F6"></div><span>Esquerdo</span><span class="legend-value" id="legendLeft">0</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#EF4444"></div><span>Direito</span><span class="legend-value" id="legendRight">0</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#F59E0B"></div><span>Meio</span><span class="legend-value" id="legendMiddle">0</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-accent green"></div>
+            <span class="card-title">Timeline de Atividade</span>
+          </div>
+          <div class="card-body">
+            <div class="timeline-bar" id="timelineBar"></div>
+            <div class="timeline-labels">
+              <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:59</span>
+            </div>
+            <div class="timeline-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:#22C55E"></div><span>Ativo</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#EF4444"></div><span>Pausa</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="live-dot"></div>
+            <span class="card-title">Live Feed</span>
+            <span class="feed-badge">Ultimos 20</span>
+          </div>
+          <div class="card-body feed-list" id="liveFeedList">
+            <div class="feed-empty">Aguardando cliques globais...</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="settingsTab" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-accent purple"></div>
+            <span class="card-title">Rastreamento</span>
+          </div>
+          <div class="card-body">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-label">Pausar Rastreamento</span>
+                <span class="setting-desc">Interromper a captura de cliques temporariamente</span>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="pauseToggle">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-accent red"></div>
+            <span class="card-title">Dados</span>
+          </div>
+          <div class="card-body">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-label">Resetar Dados do Dia</span>
+                <span class="setting-desc">Apagar todos os cliques registrados hoje</span>
+              </div>
+              <button class="btn-danger" id="resetBtn">Resetar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-accent blue"></div>
+            <span class="card-title">Sobre</span>
+          </div>
+          <div class="card-body about-body">
+            <div class="about-row"><span class="about-label">Versao</span><span class="about-value">1.0.0 (Local)</span></div>
+            <div class="about-row"><span class="about-label">Autor</span><span class="about-value">Elton</span></div>
+            <div class="about-row"><span class="about-label">Motor</span><span class="about-value">Python + pynput</span></div>
+            <div class="about-row"><span class="about-label">Licenca</span><span class="about-value">MIT</span></div>
+            <div class="about-row"><span class="about-label">GitHub</span><a href="https://github.com/elton2024br/ClickPulse" target="_blank" class="about-link">elton2024br/ClickPulse</a></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <span>Desenvolvido por <strong>Elton</strong></span>
+    </footer>
+  </div>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const C = { primary:'#7C3AED', primaryDim:'rgba(124,58,237,0.5)', green:'#22C55E', red:'#EF4444', blue:'#3B82F6', yellow:'#F59E0B', border:'#3A3A50', textDim:'#6B7280' };
+
+const API = `http://${location.host}`;
+let isPaused = false;
+let isConnected = true;
+let lastFeedCount = 0;
+
+function init() {
+  $$('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      $$('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const t = tab.dataset.tab;
+      $('#dashboardTab').classList.toggle('hidden', t !== 'dashboard');
+      $('#settingsTab').classList.toggle('hidden', t !== 'settings');
+    });
+  });
+
+  $('#pauseToggle').addEventListener('change', async () => {
+    const checked = $('#pauseToggle').checked;
+    try {
+      await fetch(`${API}/api/${checked ? 'pause' : 'resume'}`);
+      isPaused = checked;
+      updateStatusUI();
+    } catch(e) {}
+  });
+
+  $('#resetBtn').addEventListener('click', () => {
+    const ov = document.createElement('div');
+    ov.className = 'confirm-overlay';
+    ov.innerHTML = '<div class="confirm-box"><p>Resetar todos os dados de hoje?</p><div class="confirm-actions"><button class="btn-cancel">Cancelar</button><button class="btn-confirm">Confirmar</button></div></div>';
+    document.body.appendChild(ov);
+    ov.querySelector('.btn-cancel').onclick = () => ov.remove();
+    ov.querySelector('.btn-confirm').onclick = async () => {
+      try { await fetch(`${API}/api/reset`); } catch(e) {}
+      ov.remove();
+      pollData();
+    };
+    ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+  });
+
+  renderTimeline([]);
+  pollData();
+  setInterval(pollData, 500);
+
+  checkStatus();
+  setInterval(checkStatus, 3000);
+}
+
+async function checkStatus() {
+  try {
+    const res = await fetch(`${API}/api/status`);
+    const data = await res.json();
+    isPaused = data.paused;
+    isConnected = true;
+    $('#pauseToggle').checked = isPaused;
+  } catch(e) {
+    isConnected = false;
+  }
+  updateStatusUI();
+}
+
+function updateStatusUI() {
+  const dot = $('#statusDot');
+  const txt = $('#statusText');
+  const banner = $('#trackingBanner');
+  dot.classList.remove('paused','disconnected');
+
+  if (!isConnected) {
+    dot.classList.add('disconnected');
+    txt.textContent = 'Desconectado';
+    banner.className = 'tracking-banner disconnected';
+    banner.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Servidor Python nao esta rodando — execute clickpulse.py';
+  } else if (isPaused) {
+    dot.classList.add('paused');
+    txt.textContent = 'Pausado';
+    banner.className = 'tracking-banner paused';
+    banner.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg> Rastreamento pausado';
+  } else {
+    txt.textContent = 'Ativo';
+    banner.className = 'tracking-banner';
+    banner.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Rastreando cliques globais — funciona em TODAS as janelas';
+  }
+}
+
+async function pollData() {
+  try {
+    const res = await fetch(`${API}/api/data`);
+    const data = await res.json();
+    isConnected = true;
+    renderAll(data);
+  } catch(e) {
+    isConnected = false;
+    updateStatusUI();
+  }
+}
+
+function renderAll(data) {
+  if (!data) return;
+  const total = (data.totalLeft||0) + (data.totalRight||0) + (data.totalMiddle||0);
+  const activeSlots = data.timeline ? data.timeline.filter(Boolean).length : 0;
+  const activeMin = activeSlots * 30;
+  const now = new Date();
+  const minSinceMidnight = now.getHours() * 60 + now.getMinutes();
+  const pauseMin = Math.max(0, minSinceMidnight - activeMin);
+  const hoursElapsed = Math.max(1, now.getHours() + now.getMinutes() / 60);
+  const rate = Math.round(total / hoursElapsed);
+  const fmt = m => `${Math.floor(m/60)}h ${m%60}m`;
+
+  $('#statTotal').textContent = total.toLocaleString();
+  $('#statActive').textContent = fmt(activeMin);
+  $('#statPause').textContent = fmt(pauseMin);
+  $('#statRate').textContent = rate.toLocaleString();
+
+  renderBarChart(data.hourly || {});
+  renderPieChart(data.totalLeft||0, data.totalRight||0, data.totalMiddle||0, total);
+  renderTimeline(data.timeline || []);
+
+  const feedLen = (data.liveFeed || []).length;
+  if (feedLen !== lastFeedCount) {
+    renderLiveFeed(data.liveFeed || []);
+    lastFeedCount = feedLen;
+  }
+}
+
+function renderBarChart(hourly) {
+  const canvas = $('#barChart');
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const dW = canvas.parentElement.clientWidth - 16;
+  const dH = 160;
+  canvas.style.width = dW+'px'; canvas.style.height = dH+'px';
+  canvas.width = dW*dpr; canvas.height = dH*dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr,dpr); ctx.clearRect(0,0,dW,dH);
+  const vals = [];
+  for (let h=0; h<24; h++) { const s = hourly[h]||{left:0,right:0,middle:0}; vals.push((s.left||0)+(s.right||0)+(s.middle||0)); }
+  const max = Math.max(...vals, 1);
+  const p = {top:15,bottom:30,left:35,right:5};
+  const cW = dW-p.left-p.right, cH = dH-p.top-p.bottom;
+  const bW = cW/24-2;
+
+  ctx.strokeStyle=C.border; ctx.lineWidth=0.5;
+  for (let i=0;i<=4;i++) { const y=p.top+(cH/4)*i; ctx.beginPath(); ctx.setLineDash([3,3]); ctx.moveTo(p.left,y); ctx.lineTo(dW-p.right,y); ctx.stroke(); }
+  ctx.setLineDash([]);
+  ctx.fillStyle=C.textDim; ctx.font='9px monospace'; ctx.textAlign='right';
+  for (let i=0;i<=4;i++) { ctx.fillText(Math.round(max*(4-i)/4), p.left-4, p.top+(cH/4)*i+3); }
+  ctx.textAlign='center';
+  for (let h=0;h<24;h+=3) { ctx.fillText(`${h.toString().padStart(2,'0')}h`, p.left+(cW/24)*h+bW/2, dH-5); }
+
+  for (let h=0;h<24;h++) {
+    const x=p.left+(cW/24)*h+1, barH=(vals[h]/max)*cH, y=p.top+cH-barH;
+    const g = ctx.createLinearGradient(x,y,x,y+barH);
+    if (vals[h]>max*0.6) { g.addColorStop(0,C.primary); g.addColorStop(1,C.primaryDim); }
+    else { g.addColorStop(0,C.primaryDim); g.addColorStop(1,'rgba(124,58,237,0.2)'); }
+    ctx.fillStyle=g;
+    if (barH<1) continue;
+    const r=Math.min(3,bW/2,barH/2);
+    ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+bW,y,x+bW,y+barH,r); ctx.arcTo(x+bW,y+barH,x,y+barH,0); ctx.arcTo(x,y+barH,x,y,0); ctx.arcTo(x,y,x+bW,y,r); ctx.closePath(); ctx.fill();
+  }
+}
+
+function renderPieChart(left, right, middle, total) {
+  const canvas = $('#pieChart');
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio||1, size=160;
+  canvas.style.width=size+'px'; canvas.style.height=size+'px';
+  canvas.width=size*dpr; canvas.height=size*dpr;
+  const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr); ctx.clearRect(0,0,size,size);
+  const cx=size/2, cy=size/2, oR=70, iR=48;
+  if (total===0) {
+    ctx.beginPath(); ctx.arc(cx,cy,oR,0,Math.PI*2); ctx.arc(cx,cy,iR,0,Math.PI*2,true); ctx.fillStyle=C.border; ctx.fill();
+    $('#pieTotal').textContent='0'; $('#legendLeft').textContent='0'; $('#legendRight').textContent='0'; $('#legendMiddle').textContent='0';
+    return;
+  }
+  const slices=[{value:left,color:C.blue},{value:right,color:C.red},{value:middle,color:C.yellow}].filter(s=>s.value>0);
+  const gap=slices.length>1?0.04:0;
+  let angle=-Math.PI/2;
+  slices.forEach(s=>{
+    const sweep=Math.max(0.01,(s.value/total)*Math.PI*2-gap);
+    ctx.beginPath(); ctx.arc(cx,cy,oR,angle,angle+sweep); ctx.arc(cx,cy,iR,angle+sweep,angle,true); ctx.closePath(); ctx.fillStyle=s.color; ctx.fill();
+    angle+=sweep+gap;
+  });
+  $('#pieTotal').textContent=total.toLocaleString(); $('#legendLeft').textContent=left.toLocaleString(); $('#legendRight').textContent=right.toLocaleString(); $('#legendMiddle').textContent=middle.toLocaleString();
+}
+
+function renderTimeline(tl) {
+  const c=$('#timelineBar'); if(!c) return; c.innerHTML='';
+  const slots=tl.length===48?tl:new Array(48).fill(false);
+  slots.forEach((on,i)=>{
+    const s=document.createElement('div');
+    s.className=`tl-seg ${on?'on':'off'}`;
+    s.title=`${Math.floor(i/2).toString().padStart(2,'0')}:${i%2===0?'00':'30'} — ${on?'Ativo':'Pausa'}`;
+    c.appendChild(s);
+  });
+}
+
+function renderLiveFeed(feed) {
+  const c=$('#liveFeedList'); if(!c) return;
+  if (!feed||feed.length===0) { c.innerHTML='<div class="feed-empty">Aguardando cliques globais...</div>'; return; }
+  const labels={left:'Esquerdo',right:'Direito',middle:'Meio'};
+  c.innerHTML=feed.slice(0,20).map(ck=>{
+    const t=new Date(ck.timestamp);
+    const ts=`${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}:${t.getSeconds().toString().padStart(2,'0')}`;
+    return `<div class="feed-item"><div class="feed-left"><span class="feed-type ${ck.type}">${labels[ck.type]||'Clique'}</span><span class="feed-coords">X:${String(ck.x).padStart(4,' ')} Y:${String(ck.y).padStart(4,' ')}</span></div><span class="feed-time">${ts}</span></div>`;
+  }).join('');
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

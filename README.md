@@ -159,7 +159,9 @@ ClickPulse/
 ├── assets/
 │   └── icon.png                     # Icone do app
 ├── clickpulse_local/
-│   └── ClickPulse.html              # Versao standalone (abrir no navegador)
+│   ├── clickpulse.py                # Versao local (Python + pynput)
+│   ├── dashboard.html               # Dashboard web (servido pelo Python)
+│   └── ClickPulse.html              # Versao simples (apenas na pagina)
 ├── clickpulse_extension/            # Extensao Chrome (Side Panel)
 └── clickpulse/
     ├── __init__.py
@@ -194,24 +196,33 @@ Todas as configuracoes podem ser ajustadas pela interface:
 
 ---
 
-## Versao Local (HTML)
+## Versao Local (Web Dashboard + Python)
 
-O ClickPulse tambem tem uma versao standalone que roda diretamente no navegador, sem instalar nada! Basta abrir o arquivo HTML e comecar a clicar.
+O ClickPulse tambem tem uma versao leve que roda localmente no seu computador. Usa Python + pynput para capturar **cliques globais** (em qualquer janela ou programa) e exibe um dashboard em tempo real no navegador.
 
 ### Como usar
 
-1. Baixe ou clone este repositorio
-2. Abra o arquivo `clickpulse_local/ClickPulse.html` no seu navegador
-3. Pronto! Clique em qualquer lugar da pagina para comecar a rastrear
+```bash
+# 1. Instale a dependencia
+pip install pynput
+
+# 2. Entre na pasta
+cd clickpulse_local
+
+# 3. Execute
+python clickpulse.py
+```
+
+O dashboard abre automaticamente no navegador em `http://127.0.0.1:5555`.
 
 ### Funcionalidades
 
-- **Zero instalacao** — Funciona em qualquer navegador moderno
-- **Dashboard completo** — Cards de estatisticas, grafico de barras, pizza, timeline e live feed
-- **Persistencia local** — Dados salvos via localStorage com reset diario automatico
-- **Rastreamento real** — Captura cliques esquerdo, direito e meio diretamente na pagina
+- **Rastreamento global** — Captura cliques em TODAS as janelas e programas (nao apenas no navegador)
+- **Dashboard em tempo real** — Atualiza a cada 500ms com dados reais do Python
+- **Leve** — Apenas 1 dependencia (pynput), sem framework web pesado
+- **Persistencia** — Dados salvos em arquivo JSON local com reset diario automatico
 - **Pausar/Retomar** — Controle o rastreamento pela aba de configuracoes
-- **Tema escuro** — Visual identico ao app desktop e extensao
+- **Tema escuro** — Visual identico ao app desktop e extensao Chrome
 
 ---
 
