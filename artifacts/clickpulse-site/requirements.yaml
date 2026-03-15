@@ -1,0 +1,11 @@
+packages:
+  "recharts": "For the dashboard charts (Bar, Pie)"
+  "framer-motion": "For smooth layout animations and live feed transitions"
+  "lucide-react": "For beautiful UI icons"
+  "date-fns": "For formatting dates and times"
+  "clsx": "For conditional class merging"
+  "tailwind-merge": "For conditional class merging"
+
+notes:
+  - No backend API exists; all data is mocked client-side using a custom hook to simulate real-time tracking.
+  - The dashboard uses a specific dark mode theme based on the ClickPulse desktop app (#1E1E2E background, #7C3AED primary).
