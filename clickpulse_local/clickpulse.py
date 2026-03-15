@@ -134,6 +134,7 @@ class ClickPulseHandler(SimpleHTTPRequestHandler):
         pass
 
     def do_GET(self):
+        global is_paused
         parsed = urlparse(self.path)
         path = parsed.path
 
@@ -156,12 +157,10 @@ class ClickPulseHandler(SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(d, ensure_ascii=False).encode("utf-8"))
 
         elif path == "/api/pause":
-            global is_paused
             is_paused = True
             self._json_response({"paused": True})
 
         elif path == "/api/resume":
-            global is_paused
             is_paused = False
             self._json_response({"paused": False})
 
