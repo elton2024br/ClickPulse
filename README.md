@@ -158,6 +158,9 @@ ClickPulse/
 ├── requirements.txt                 # Dependencias Python
 ├── assets/
 │   └── icon.png                     # Icone do app
+├── clickpulse_local/
+│   └── ClickPulse.html              # Versao standalone (abrir no navegador)
+├── clickpulse_extension/            # Extensao Chrome (Side Panel)
 └── clickpulse/
     ├── __init__.py
     ├── database.py                  # Banco de dados SQLite
@@ -188,6 +191,27 @@ Todas as configuracoes podem ser ajustadas pela interface:
 | Alerta de pausa longa | 30 min | Notifica apos X minutos em pausa |
 | Milestone de cliques | 100 | Notifica a cada X cliques atingidos |
 | Intervalo de verificacao | 10 seg | Frequencia de checagem de atividade |
+
+---
+
+## Versao Local (HTML)
+
+O ClickPulse tambem tem uma versao standalone que roda diretamente no navegador, sem instalar nada! Basta abrir o arquivo HTML e comecar a clicar.
+
+### Como usar
+
+1. Baixe ou clone este repositorio
+2. Abra o arquivo `clickpulse_local/ClickPulse.html` no seu navegador
+3. Pronto! Clique em qualquer lugar da pagina para comecar a rastrear
+
+### Funcionalidades
+
+- **Zero instalacao** — Funciona em qualquer navegador moderno
+- **Dashboard completo** — Cards de estatisticas, grafico de barras, pizza, timeline e live feed
+- **Persistencia local** — Dados salvos via localStorage com reset diario automatico
+- **Rastreamento real** — Captura cliques esquerdo, direito e meio diretamente na pagina
+- **Pausar/Retomar** — Controle o rastreamento pela aba de configuracoes
+- **Tema escuro** — Visual identico ao app desktop e extensao
 
 ---
 
